@@ -16,23 +16,45 @@ ENEMY_SIZE = 50
 ENEMY_POS = [random.randint(0, WIDTH-ENEMY_SIZE), 0]
 ENEMY_SPEED = 5
 
+ENEMY_LIST = [ENEMY_POS]
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 game_over = False
 
-def detect_collision(player_pos, player_size, enemy_pos, enemy_size):
-    px = player_pos[0]
-    py = player_pos[1]
-    ps = player_size
-    
-    ex = enemy_pos[0]
-    ey = enemy_pos[1]
-    es = enemy_size
+def drop_enemies(enemy_list):
+    delay = random.random()
+    if len(enemy_list) < 10 and delay < 0.1:
+        x_pos = random.randint(0, WIDTH-ENEMY_SIZE)
+        y_pos = 0
+        enemy_list.append([x_pos,y_pos])
 
-    if (px <= ex+es and ex < px+ps) and (py <= ey+es and ey < py+ps):
-        return True
-    else:
-        return False
+def draw_enemies(enemy_list):
+    for enemy_pos in enemy_list:
+        pygame.draw.rect(screen, ENEMY_COLOR, (enemy_pos[0], enemy_pos[1], ENEMY_SIZE, ENEMY_SIZE))
+
+def update_enemies_positions(enemy_list):
+    for enemy_pos in enemy_list:
+        if enemy_pos[1] >= 0 and enemy_pos[1] < HEIGHT:
+            enemy_pos[1] += ENEMY_SPEED
+        else:
+            enemy_pos[0] = random.randint(0, WIDTH-ENEMY_SIZE)
+            enemy_pos[1] = 0
+
+def detect_collision(player_pos, enemy_list):
+    for enemy_pos in enemy_list:
+        px = player_pos[0]
+        py = player_pos[1]
+        ps = PLAYER_SIZE
+        
+        ex = enemy_pos[0]
+        ey = enemy_pos[1]
+        es = ENEMY_SIZE
+
+        if (px <= ex+es and ex < px+ps) and (py <= ey+es and ey < py+ps):
+            return True
+        
+    return False
 
 while not game_over:
 
@@ -54,17 +76,20 @@ while not game_over:
     screen.fill(BACKGROUND_COLOR)
 
     # Updating the position of the enemy
-    if ENEMY_POS[1] >= 0 and ENEMY_POS[1] < HEIGHT:
-        ENEMY_POS[1] += ENEMY_SPEED
-    else:
-        ENEMY_POS[0] = random.randint(0, WIDTH-ENEMY_SIZE)
-        ENEMY_POS[1] = 0
+    # if ENEMY_POS[1] >= 0 and ENEMY_POS[1] < HEIGHT:
+    #     ENEMY_POS[1] += ENEMY_SPEED
+    # else:
+    #     ENEMY_POS[0] = random.randint(0, WIDTH-ENEMY_SIZE)
+    #     ENEMY_POS[1] = 0
 
-    pygame.draw.rect(screen, ENEMY_COLOR, (ENEMY_POS[0], ENEMY_POS[1], ENEMY_SIZE, ENEMY_SIZE))
+    drop_enemies(ENEMY_LIST)
+    draw_enemies(ENEMY_LIST)
+    update_enemies_positions(ENEMY_LIST)
+    # pygame.draw.rect(screen, ENEMY_COLOR, (ENEMY_POS[0], ENEMY_POS[1], ENEMY_SIZE, ENEMY_SIZE))
     pygame.draw.rect(screen, PLAYER_COLOR, (PLAYER_POS[0], PLAYER_POS[1], PLAYER_SIZE, PLAYER_SIZE))
 
-    if detect_collision(PLAYER_POS, PLAYER_SIZE, ENEMY_POS, ENEMY_SIZE):
-        print("Bum! Colided!!")
+    if detect_collision(PLAYER_POS, ENEMY_LIST):
+        print("Bum! Collided!!")
         game_over = True
 
     clock.tick(30)
